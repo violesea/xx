@@ -2,18 +2,18 @@ name: build-ics
 
 on:
   schedule:
-    - cron: "0 0 * * *"      # 每天 UTC 00:00（北京时间 08:00 左右）
+    - cron: "0 0 * * *"   # 每天 UTC 00:00（北京时间约 08:00）
   workflow_dispatch: {}
 
 permissions:
-  contents: write
-  issues: write
+  contents: write          # 允许提交生成的 .ics
 
 jobs:
   build:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Setup Python
@@ -21,33 +21,18 @@ jobs:
         with:
           python-version: "3.11"
 
-      - name: Install deps
+      - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pyyaml
+          pip install pyyaml lunardate
 
       - name: Generate ICS
         run: python generate_ics.py
 
-      - name: Commit & Push
+      - name: Commit & Push artifacts
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add beijing-xianxing.ics NEED_ROTATION_UPDATE.txt || true
+          git add beijing-xianxing.ics || true
           git commit -m "update ics" || exit 0
           git push
-
-      - name: Create issue if rotation needed
-        if: ${{ hashFiles('NEED_ROTATION_UPDATE.txt') != '' }}
-        uses: actions/github-script@v7
-        with:
-          script: |
-            const fs = require('fs');
-            const body = fs.readFileSync('NEED_ROTATION_UPDATE.txt','utf8');
-            const title = `轮换表即将到期，请更新（${new Date().toISOString().slice(0,10)}）`;
-            await github.rest.issues.create({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              title,
-              body
-            });
