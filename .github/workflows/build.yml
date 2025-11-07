@@ -21,3 +21,28 @@ jobs:
           git add beijing-xianxing.ics
           git commit -m "update ics" || exit 0
           git push
+      - name: Run generator
+        run: python generate_ics.py
+
+      - name: Commit & Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add beijing-xianxing.ics NEED_ROTATION_UPDATE.txt || true
+          git commit -m "update ics" || exit 0
+          git push
+
+      - name: Create issue if rotation needed
+        if: ${{ hashFiles('NEED_ROTATION_UPDATE.txt') != '' }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('NEED_ROTATION_UPDATE.txt','utf8');
+            const title = `轮换表即将到期，请更新（${new Date().toISOString().slice(0,10)}）`;
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body
+            });
