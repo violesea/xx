@@ -1,0 +1,23 @@
+name: build-ics
+on:
+  schedule:
+    - cron: "0 0 * * *"  # 每天 08:00 北京时间前后更新（UTC 00:00）
+  workflow_dispatch: {}
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: python generate_ics.py
+      - name: Commit & Push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add beijing-xianxing.ics
+          git commit -m "update ics" || exit 0
+          git push
