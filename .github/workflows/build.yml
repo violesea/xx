@@ -2,17 +2,16 @@ name: build-ics
 
 on:
   schedule:
-    - cron: "0 0 * * *"   # 每天 UTC 00:00（北京时间 08:00 左右）
+    - cron: "0 0 * * *"      # 每天 UTC 00:00（北京时间 08:00 左右）
   workflow_dispatch: {}
 
 permissions:
-  contents: write        # 允许提交文件
-  issues: write          # 允许自动创建 Issue
+  contents: write
+  issues: write
 
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -21,7 +20,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-          cache: "pip"
 
       - name: Install deps
         run: |
